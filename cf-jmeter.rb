@@ -1,26 +1,27 @@
 require "ruby-jmeter"
 
-if ARGV.size != 3
+if ARGV.size != 2
   puts <<-EOF
 ------- CF perf test: ERROR! --------
 Usage:
-  bundle exec ruby cf-jmeter.rb <domain> <threads> <loops>
+  bundle exec ruby cf-jmeter.rb <domain> <threads>
 EOF
   exit 1
 end
 
-domain       = ARGV[0].to_i
+domain       = ARGV[0]
 thread_count = ARGV[1].to_i
-loop_count   = ARGV[2].to_i
 
 test do
 
-  threads count: thread_count, loops: loop_count do
-    visit name: 'CPU', url: "http://cf-example-ruby-sinatra.#{domain}/simplecpuload"
+  http_request_defaults domain: "cf-example-ruby-sinatra.#{domain}"
+
+  threads name: 'CPU', count: thread_count, continue_forever: true, scheduler: false do
+    visit name: 'CPU', url: "/simplecpuload"
   end
 
-  threads count: thread_count, loops: loop_count do
-    visit name: 'Memory', url: "http://cf-example-ruby-sinatra.#{domain}/mem/alloc/10/0/0"
+  threads name: 'Memory', count: thread_count, continue_forever: true, scheduler: false do
+    visit name: 'Memory', url: "/mem/alloc/10/0/0"
   end
 
   view_results_tree
